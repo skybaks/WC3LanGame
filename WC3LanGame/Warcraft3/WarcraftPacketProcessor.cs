@@ -26,24 +26,26 @@ namespace WC3LanGame.Warcraft3
 
         public static byte[] GenerateGameCancelledPacket(uint gameId)
         {
-            List<byte> packetBytes = new List<byte> { FirstHeaderByte, GameCancelledOPCode };
-            packetBytes.AddRange(GameCancelledPacketLength.ToBytes());
-            packetBytes.AddRange(gameId.ToBytes());
-
-            return packetBytes.ToArray();
+            return
+            [
+                FirstHeaderByte, GameCancelledOPCode,
+                .. GameCancelledPacketLength.ToBytes(),
+                .. gameId.ToBytes(),
+            ];
         }
 
         public static byte[] GenerateGameAnnouncePacket(GameInfo game)
         {
             uint playersCount = game.CurrentPlayersCount + game.SlotsCount - game.PlayerSlotsCount;
 
-            List<byte> packetBytes = new List<byte> { FirstHeaderByte, GamePlayersChangedOPCode };
-            packetBytes.AddRange(GamePlayersChangedPacketLength.ToBytes());
-            packetBytes.AddRange(game.GameId.ToBytes());
-            packetBytes.AddRange(playersCount.ToBytes());
-            packetBytes.AddRange(game.SlotsCount.ToBytes());
-
-            return packetBytes.ToArray();
+            return
+            [
+                FirstHeaderByte, GamePlayersChangedOPCode,
+                .. GamePlayersChangedPacketLength.ToBytes(),
+                .. game.GameId.ToBytes(),
+                .. playersCount.ToBytes(),
+                .. game.SlotsCount.ToBytes(),
+            ];
         }
 
         public static byte[] GenerateQueryForLanGamesPacket(HostInfo hostInfo)
@@ -55,13 +57,14 @@ namespace WC3LanGame.Warcraft3
                 _ => throw new ArgumentOutOfRangeException(nameof(hostInfo))
             };
 
-            List<byte> packetBytes = new List<byte> { FirstHeaderByte, QueryForLanGameOPCode };
-            packetBytes.AddRange(QueryForLanGamePacketLength.ToBytes());
-            packetBytes.AddRange(gameTypeBytes);
-            packetBytes.AddRange(((uint)hostInfo.Version.Id()).ToBytes());
-            packetBytes.AddRange(0U.ToBytes()); //Game ID, This field is zero when it is broadcasted
-
-            return packetBytes.ToArray();
+            return
+            [
+                FirstHeaderByte, QueryForLanGameOPCode,
+                .. QueryForLanGamePacketLength.ToBytes(),
+                .. gameTypeBytes,
+                .. ((uint)hostInfo.Version.Id()).ToBytes(),
+                .. 0U.ToBytes(),
+            ];
         }
 
         public static GameInfo ParseGameInfoPacket(byte[] replyPacket)
@@ -69,26 +72,28 @@ namespace WC3LanGame.Warcraft3
             // Check that it is correct Warcraft packet header
             if (replyPacket[0] != FirstHeaderByte || replyPacket[1] != GameInfoReplyOPCode) 
                 return null;
+            Span<byte> replyPacketSpan = replyPacket.AsSpan();
 
             WarcraftType gameType = ParseGameType(replyPacket[4..8]);
 
-            uint gameId              = BitConverter.ToUInt32(replyPacket[12..]);
-            uint slotsCount          = BitConverter.ToUInt32(replyPacket[^22..]);
-            uint currentPlayersCount = BitConverter.ToUInt32(replyPacket[^14..]);
-            uint playerSlotsCount    = BitConverter.ToUInt32(replyPacket[^10..]);
-            ushort port              = BitConverter.ToUInt16(replyPacket[^2..]);
+            uint gameId              = BitConverter.ToUInt32(replyPacketSpan[12..]);
+            uint slotsCount          = BitConverter.ToUInt32(replyPacketSpan[^22..]);
+            uint currentPlayersCount = BitConverter.ToUInt32(replyPacketSpan[^14..]);
+            uint playerSlotsCount    = BitConverter.ToUInt32(replyPacketSpan[^10..]);
+            ushort port              = BitConverter.ToUInt16(replyPacketSpan[^2..]);
 
-            string name = GetStringSegment(replyPacket[20..]);
+            string name = GetStringSegment(replyPacketSpan[20..]);
 
             int encodedSegmentStartIndex = 22 + Encoding.UTF8.GetByteCount(name);
-            byte[] decrypted = DecodeStringPart(replyPacket[encodedSegmentStartIndex..]);
+            byte[] decrypted = DecodeStringPart(replyPacketSpan[encodedSegmentStartIndex..]);
+            Span<byte> decryptedSpan = decrypted.AsSpan();
 
             uint settings = BitConverter.ToUInt32(decrypted);
 
-            ushort mapWidth = BitConverter.ToUInt16(decrypted[5..]);
-            ushort mapHeight = BitConverter.ToUInt16(decrypted[7..]);
+            ushort mapWidth = BitConverter.ToUInt16(decryptedSpan[5..]);
+            ushort mapHeight = BitConverter.ToUInt16(decryptedSpan[7..]);
 
-            string mapName = GetStringSegment(decrypted[13..]);
+            string mapName = GetStringSegment(decryptedSpan[13..]);
             string lastMapNameSegment = mapName.Split('\\').LastOrDefault();
             mapName = lastMapNameSegment ?? mapName;
 
@@ -108,24 +113,22 @@ namespace WC3LanGame.Warcraft3
         }
 
         // Get first null-terminated string from byte array 
-        private static string GetStringSegment(byte[] data)
+        private static string GetStringSegment(ReadOnlySpan<byte> data)
         {
-            int firstZeroIndex = Array.FindIndex(data, b => b == 0);
+            int firstZeroIndex = data.IndexOf((byte)0);
             if (firstZeroIndex == -1)
                 return "";
-
-            byte[] stringSegment = data[..firstZeroIndex];
-            return Encoding.UTF8.GetString(stringSegment);
+            return Encoding.UTF8.GetString(data[..firstZeroIndex]);
         }
 
         // Decode encoded string part. This algorithm is described in 3b part of GamePacketSpecs doc.
-        private static byte[] DecodeStringPart(byte[] data)
+        private static byte[] DecodeStringPart(ReadOnlySpan<byte> data)
         {
             byte mask = 0;
-            MemoryStream memoryStream = new MemoryStream();
+            MemoryStream memoryStream = new();
 
-            int firstZeroIndex = Array.FindIndex(data, b => b == 0);
-            byte[] dataCut = data[..firstZeroIndex];
+            int firstZeroIndex = data.IndexOf((byte)0);
+            var dataCut = data[..firstZeroIndex];
 
             for (int i = 0; i < dataCut.Length; i++)
             {

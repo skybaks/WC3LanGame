@@ -10,8 +10,8 @@ namespace WC3LanGame
 {
     public partial class MainForm : Form
     {
-        private Listener _listener; // This waits for proxy connections
-        private Browser _browser; // This sends game info queries to the server and forwards the responses to the client
+        private Listener? _listener; // This waits for proxy connections
+        private Browser? _browser; // This sends game info queries to the server and forwards the responses to the client
         private readonly List<TcpProxy> _proxies = new(); // A collection of game proxies.  Usually we would only need 1 proxy.
         
         private HostInfo _hostInfo;
@@ -83,8 +83,8 @@ namespace WC3LanGame
 
         private void runProxyButton_Click(object sender, EventArgs e)
         {
-            WarcraftVersionWrapper version = (WarcraftVersionWrapper) wc3VersionComboBox.SelectedItem;
-            WarcraftType gameType = (WarcraftType) gameTypeComboBox.SelectedItem;
+            WarcraftVersionWrapper version = (wc3VersionComboBox.SelectedItem as WarcraftVersionWrapper) ?? new WarcraftVersionWrapper(WarcraftVersion.V1_27);
+            WarcraftType gameType = (gameTypeComboBox.SelectedItem as WarcraftType?) ?? WarcraftType.TheFrozenThrone;
             _hostInfo = new HostInfo
             {
                 Hostname = hostAddressComboBox.Text,
@@ -284,6 +284,7 @@ namespace WC3LanGame
 
                     _proxies.Clear();
                 }
+                _listener = null;
             }
 
             if (_foundGame) 

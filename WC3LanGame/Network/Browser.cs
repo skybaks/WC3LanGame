@@ -13,7 +13,7 @@ namespace WC3LanGame.Network
     {
         private const ushort DefaultWarcraftPort = 6112;
 
-        private Socket _browseSocket;
+        private Socket? _browseSocket;
         private byte[] _browsePacket;
 
         private readonly IPEndPoint _serverEP;
@@ -60,11 +60,11 @@ namespace WC3LanGame.Network
         public void Stop()
         {
             _queryTimer.Stop();
-            _browseSocket.Close();
+            _browseSocket?.Close();
             _browseSocket = null;
         }
 
-        private void QueryTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void QueryTimer_Elapsed(object? sender, ElapsedEventArgs e)
         {
             ProcessResponses();
 

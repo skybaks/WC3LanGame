@@ -12,7 +12,7 @@ namespace WC3LanGame
     {
         private Listener? _listener; // This waits for proxy connections
         private Browser? _browser; // This sends game info queries to the server and forwards the responses to the client
-        private readonly List<TcpProxy> _proxies = new(); // A collection of game proxies.  Usually we would only need 1 proxy.
+        private readonly List<TcpProxy> _proxies = []; // A collection of game proxies.  Usually we would only need 1 proxy.
         
         private HostInfo _hostInfo;
         private IPAddress _serverAddress;
@@ -58,7 +58,7 @@ namespace WC3LanGame
             _updateWC3RunningStatusTimer.Start();
         }
 
-        private void UpdateWC3RunningStatus(object sender, ElapsedEventArgs e)
+        private void UpdateWC3RunningStatus(object? sender, ElapsedEventArgs e)
         {
             bool wc3Running = WarcraftExecutable.IsWC3ProcessRunning();
             string wc3ProcessRunningStatus = wc3Running
@@ -106,11 +106,6 @@ namespace WC3LanGame
             Focus();
         }
 
-        private void Notify(string text)
-        {
-            notifyIcon.ShowBalloonTip(1000, "WC3 Proxy", text, ToolTipIcon.Info);
-        }
-
         private void stopProxyButton_Click(object sender, EventArgs e)
         {
             StopProxy();
@@ -119,13 +114,11 @@ namespace WC3LanGame
         private void runWC3Button_Click(object sender, EventArgs e)
         {
             string message = WarcraftExecutable.RunWC3((WarcraftType) gameTypeComboBox.SelectedItem);
-            Notify(message);
         }
 
         private void stopWC3Button_Click(object sender, EventArgs e)
         {
             string result = WarcraftExecutable.StopWC3ProcessRunning();
-            Notify(result);
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
@@ -147,8 +140,6 @@ namespace WC3LanGame
 
         private void ResetGameInfo()
         {
-            Notify("Lost game");
-
             gameNameValueLabel.Text = "-";
             gamePortValueLabel.Text = "-";
             gameTypeValueLabel.Text = "-";
@@ -169,9 +160,6 @@ namespace WC3LanGame
                 Invoke(DisplayGameInfo);
                 return;
             }
-
-            if (!_foundGame) 
-                Notify("Found game: " + _gameInfo.Name);
 
             gamePortValueLabel.Text = _gameInfo.Port.ToString();
             gameNameValueLabel.Text = _gameInfo.Name;
@@ -237,7 +225,6 @@ namespace WC3LanGame
         private void GotConnection(Socket clientSocket)
         {
             string message = $"Got a connection from {clientSocket.RemoteEndPoint}";
-            Notify(message);
 
             TcpProxy proxy = new TcpProxy(clientSocket, _serverEP);
             proxy.ProxyDisconnected += ProxyDisconnected;
@@ -264,8 +251,6 @@ namespace WC3LanGame
 
         private void ProxyDisconnected(TcpProxy proxy)
         {
-            Notify("Client disconnected");
-
             lock (_proxies)
                 if (_proxies.Contains(proxy)) _proxies.Remove(proxy);
 

@@ -53,12 +53,10 @@
             gameNameValueLabel = new Label();
             hostAddressTitleLabel = new Label();
             stopProxyButton = new Button();
-            runWC3Button = new Button();
             wc3ProcessRunningStatusLabel = new Label();
             scanningNetworkProgressBar = new ProgressBar();
             hostAddressComboBox = new ComboBox();
             scanningNetworkLabel = new Label();
-            stopWC3Button = new Button();
             proxyActiveLabel = new Label();
             gameInfoTableLayoutPanel.SuspendLayout();
             SuspendLayout();
@@ -332,17 +330,6 @@
             stopProxyButton.Visible = false;
             stopProxyButton.Click += stopProxyButton_Click;
             // 
-            // runWC3Button
-            // 
-            runWC3Button.Font = new Font("Segoe UI", 12F);
-            runWC3Button.Location = new Point(159, 267);
-            runWC3Button.Name = "runWC3Button";
-            runWC3Button.Size = new Size(91, 30);
-            runWC3Button.TabIndex = 11;
-            runWC3Button.Text = "Run WC3";
-            runWC3Button.UseVisualStyleBackColor = true;
-            runWC3Button.Click += runWC3Button_Click;
-            // 
             // wc3ProcessRunningStatusLabel
             // 
             wc3ProcessRunningStatusLabel.AutoSize = true;
@@ -380,18 +367,6 @@
             scanningNetworkLabel.TabIndex = 15;
             scanningNetworkLabel.Text = "Network scanning:";
             // 
-            // stopWC3Button
-            // 
-            stopWC3Button.Font = new Font("Segoe UI", 12F);
-            stopWC3Button.Location = new Point(159, 267);
-            stopWC3Button.Name = "stopWC3Button";
-            stopWC3Button.Size = new Size(91, 30);
-            stopWC3Button.TabIndex = 16;
-            stopWC3Button.Text = "Stop WC3";
-            stopWC3Button.UseVisualStyleBackColor = true;
-            stopWC3Button.Visible = false;
-            stopWC3Button.Click += stopWC3Button_Click;
-            // 
             // proxyActiveLabel
             // 
             proxyActiveLabel.AutoSize = true;
@@ -410,12 +385,10 @@
             BackgroundImage = Properties.Resources.WarcraftBackgroundImage;
             ClientSize = new Size(624, 321);
             Controls.Add(proxyActiveLabel);
-            Controls.Add(stopWC3Button);
             Controls.Add(scanningNetworkLabel);
             Controls.Add(hostAddressComboBox);
             Controls.Add(scanningNetworkProgressBar);
             Controls.Add(wc3ProcessRunningStatusLabel);
-            Controls.Add(runWC3Button);
             Controls.Add(stopProxyButton);
             Controls.Add(gameInfoTableLayoutPanel);
             Controls.Add(runProxyButton);
@@ -459,12 +432,10 @@
         private Label clientCountTitleLabel;
         private Label clientCountValueLabel;
         private Button stopProxyButton;
-        private Button runWC3Button;
         private Label wc3ProcessRunningStatusLabel;
         private ProgressBar scanningNetworkProgressBar;
         private ComboBox hostAddressComboBox;
         private Label scanningNetworkLabel;
-        private Button stopWC3Button;
         private Label mapSizeValueLabel;
         private Label mapSizeTitleLabel;
         private Label gameTypeValueLabel;

@@ -69,16 +69,6 @@ namespace WC3LanGame
                 wc3ProcessRunningStatusLabel.Invoke(() => wc3ProcessRunningStatusLabel.Text = wc3ProcessRunningStatus);
             else
                 wc3ProcessRunningStatusLabel.Text = wc3ProcessRunningStatus;
-
-            if (runWC3Button.InvokeRequired)
-                runWC3Button.Invoke(() => runWC3Button.Visible = !wc3Running);
-            else
-                runWC3Button.Visible = !wc3Running;
-
-            if (stopWC3Button.InvokeRequired)
-                stopWC3Button.Invoke(() => stopWC3Button.Visible = wc3Running);
-            else
-                stopWC3Button.Visible = wc3Running;
         }
 
         private void runProxyButton_Click(object sender, EventArgs e)
@@ -109,16 +99,6 @@ namespace WC3LanGame
         private void stopProxyButton_Click(object sender, EventArgs e)
         {
             StopProxy();
-        }
-
-        private void runWC3Button_Click(object sender, EventArgs e)
-        {
-            string message = WarcraftExecutable.RunWC3((WarcraftType) gameTypeComboBox.SelectedItem);
-        }
-
-        private void stopWC3Button_Click(object sender, EventArgs e)
-        {
-            string result = WarcraftExecutable.StopWC3ProcessRunning();
         }
 
         private async void MainForm_Load(object sender, EventArgs e)

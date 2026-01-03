@@ -13,13 +13,14 @@ namespace WC3LanGame
         private Listener? _listener; // This waits for proxy connections
         private Browser? _browser; // This sends game info queries to the server and forwards the responses to the client
         private readonly List<TcpProxy> _proxies = []; // A collection of game proxies.  Usually we would only need 1 proxy.
-        
+
         private HostInfo _hostInfo;
         private IPAddress _serverAddress;
         private IPEndPoint _serverEP;
 
         private readonly Timer _updateWC3RunningStatusTimer = new(1000);
-        
+        private bool _wc3Running = false;
+
         private bool _foundGame;
         private DateTime _lastFoundServer;
         private GameInfo _gameInfo;
@@ -34,11 +35,11 @@ namespace WC3LanGame
         #region Controls
         private void InitSettingsComponent()
         {
-            foreach (WarcraftVersion version in (WarcraftVersion[]) Enum.GetValues(typeof(WarcraftVersion)))
+            foreach (WarcraftVersion version in (WarcraftVersion[])Enum.GetValues(typeof(WarcraftVersion)))
             {
                 wc3VersionComboBox.Items.Add(new WarcraftVersionWrapper(version));
             }
-            
+
             string installedVersion = WarcraftExecutable.GetInstalledWC3Version();
             var item = wc3VersionComboBox.Items.Cast<WarcraftVersionWrapper>()
                 .FirstOrDefault(x => x.ToString() == installedVersion);
@@ -46,7 +47,7 @@ namespace WC3LanGame
             if (item != null)
                 wc3VersionComboBox.SelectedItem = item;
 
-            foreach (WarcraftType gameType in (WarcraftType[]) Enum.GetValues(typeof(WarcraftType)))
+            foreach (WarcraftType gameType in (WarcraftType[])Enum.GetValues(typeof(WarcraftType)))
             {
                 gameTypeComboBox.Items.Add(gameType);
             }
@@ -60,7 +61,19 @@ namespace WC3LanGame
 
         private void UpdateWC3RunningStatus(object? sender, ElapsedEventArgs e)
         {
+
             bool wc3Running = WarcraftExecutable.IsWC3ProcessRunning();
+            if (wc3Running && !_wc3Running)
+            {
+                string? wc3Version = WarcraftExecutable.GetRunningWC3Version();
+                var item = wc3VersionComboBox.Items.Cast<WarcraftVersionWrapper>().FirstOrDefault(x => x.ToString() == wc3Version);
+                if (item is not null)
+                {
+                    if (wc3VersionComboBox.InvokeRequired) { wc3VersionComboBox.Invoke(() => wc3VersionComboBox.SelectedItem = item); }
+                    else { wc3VersionComboBox.SelectedItem = item; }
+                }
+            }
+            _wc3Running = wc3Running;
             string wc3ProcessRunningStatus = wc3Running
                 ? "WC3 is running"
                 : "WC3 isn't running";
@@ -90,12 +103,6 @@ namespace WC3LanGame
             StopProxy();
         }
 
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            WindowState = FormWindowState.Normal;
-            Focus();
-        }
-
         private void stopProxyButton_Click(object sender, EventArgs e)
         {
             StopProxy();
@@ -106,11 +113,6 @@ namespace WC3LanGame
             var ipList = await NetworkScanner.FindAllActiveIpInAllLocalNetworks(scanningNetworkProgressBar);
             hostAddressComboBox.Items.AddRange(ipList);
             scanningNetworkLabel.Visible = false;
-        }
-
-        private void MainForm_Resize(object sender, EventArgs e)
-        {
-            ShowInTaskbar = (WindowState != FormWindowState.Minimized);
         }
 
         #endregion
@@ -173,7 +175,7 @@ namespace WC3LanGame
         {
             // We don't receive the "server cancelled" messages
             // because they are only ever broadcast to the host's LAN.
-            if (!_foundGame) 
+            if (!_foundGame)
                 return;
 
             TimeSpan interval = DateTime.Now - _lastFoundServer;
@@ -242,7 +244,7 @@ namespace WC3LanGame
             if (_listener != null)
             {
                 _listener.Stop();
-                lock (_proxies) 
+                lock (_proxies)
                 {
                     foreach (TcpProxy p in _proxies)
                         p.Stop();
@@ -252,7 +254,7 @@ namespace WC3LanGame
                 _listener = null;
             }
 
-            if (_foundGame) 
+            if (_foundGame)
                 _browser?.SendGameCancelled((byte)_gameInfo.GameId);
 
             _browser?.Stop();

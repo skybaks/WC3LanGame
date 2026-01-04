@@ -61,7 +61,6 @@ namespace WC3LanGame
 
         private void UpdateWC3RunningStatus(object? sender, ElapsedEventArgs e)
         {
-
             bool wc3Running = WarcraftExecutable.IsWC3ProcessRunning();
             if (wc3Running && !_wc3Running)
             {
